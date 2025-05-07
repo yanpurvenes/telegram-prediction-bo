@@ -126,8 +126,8 @@ async def send_daily_predictions() -> None:
         now = datetime.datetime.now(TIMEZONE)
         
         # Определяем время следующей отправки (например, в 9:00 утра)
-        target_hour = 9
-        target_minute = 0
+        target_hour = 21
+        target_minute = 20
         
         next_run = now.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
         if now.hour > target_hour or (now.hour == target_hour and now.minute >= target_minute):
