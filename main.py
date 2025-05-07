@@ -10,9 +10,6 @@ import telegram
 from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes, CallbackContext
 
-print("DEBUG >>> TELEGRAM_BOT_TOKEN:", os.getenv("TELEGRAM_BOT_TOKEN"))
-print("DEBUG >>> ENV:", dict(os.environ))
-
 # Настройка логирования
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
