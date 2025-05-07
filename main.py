@@ -8,7 +8,7 @@ import pytz
 from typing import Dict, List, Set
 import telegram
 from telegram import Update, Bot
-from telegram.ext import Application, CommandHandler, ContextTypes, CallbackContext
+from telegram.ext import Application, CommandHandler, ContextTypes, CallbackContext, MessageHandler, filters
 
 # Настройка логирования
 logging.basicConfig(
@@ -147,6 +147,12 @@ async def send_daily_predictions() -> None:
         # Сбрасываем отслеживание отправленных предсказаний для нового дня
         sent_quotes.clear()
         
+        # Получаем ID канала
+        channel_id = application.bot_data.get("channel_id")
+        if not channel_id:
+            logger.error("ID канала не настроен")
+            continue
+
         # Отправляем предсказания всем пользователям
         for user_id, user in users_data.items():
             # Выбираем предсказание, которое еще не было отправлено сегодня
@@ -163,9 +169,12 @@ async def send_daily_predictions() -> None:
                 username = user.get('username')
                 message = f"@{username}, ваше предсказание на сегодня:\n\n{quote['text']}" if username else f"Ваше предсказание на сегодня:\n\n{quote['text']}"
                 
-                # Отправляем сообщение пользователю
-                # В реальности здесь должна быть отправка в канал или личные сообщения
-                # bot.send_message(chat_id=user_id, text=message)
+                # Отправляем сообщение в канал
+                await application.bot.send_message(
+                    chat_id=channel_id,
+                    text=message,
+                    parse_mode='HTML'
+                )
                 logger.info(f"Отправлено предсказание пользователю {user.get('first_name')} (@{username}): {quote['text'][:30]}...")
                 
                 # Ждем 30 секунд перед отправкой следующему пользователю
@@ -195,6 +204,9 @@ def main() -> None:
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("setup_channel", setup_channel))
     application.add_handler(CommandHandler("test_prediction", test_prediction))
+    
+    # Добавляем обработчик сообщений для сбора пользователей
+    application.add_handler(MessageHandler(filters.ALL, collect_users_from_updates))
 
     # Запускаем задачу отправки ежедневных предсказаний
     application.job_queue.run_once(
